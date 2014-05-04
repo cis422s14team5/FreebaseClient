@@ -37,13 +37,9 @@ import java.net.*;
 public class Client {
 
     public static void main(String[] args) throws IOException {
-//        if (args.length != 2) {
-//            System.err.println("Usage: java -jar FreebaseTestClient <host name> <port number>");
-//            System.exit(1);
-//        }
+        String hostName = "hkhamm.com";
+        int portNumber = 1981;
 
-        String hostName = "hkhamm.com"; // args[0];
-        int portNumber = 1981; // Integer.parseInt(args[1]);
         Socket socket = new Socket(hostName, portNumber);
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -54,6 +50,7 @@ public class Client {
         while ((serverInput = in.readLine()) != null) {
             if (!serverInput.equals("Bye.")) {
                 processor.processServer(serverInput);
+                System.out.print(">>> ");
 
                 String userInput = stdIn.readLine();
                 if (userInput != null) {

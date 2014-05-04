@@ -15,12 +15,10 @@ public class ClientProcessor {
     TopicProcessor processor = new TopicProcessor();
 
     public void processServer(String input) {
-        System.out.println();
-        String[] outputArray = input.split("");
+        String[] output = input.split("");
 
-        if (outputArray[0].equals("{")) {
-            Object obj = JSONValue.parse(input);
-            JSONObject topic = (JSONObject) obj;
+        if (output[0].equals("{")) {
+            JSONObject topic = (JSONObject) JSONValue.parse(input);
 
             ArrayList<String> outputList = new ArrayList<>();
             switch (state) {
@@ -34,10 +32,10 @@ public class ClientProcessor {
             }
             outputList.forEach(System.out::println);
 
-            System.out.println();
-            System.out.println("Server: Enter a title to search again, film or tv to switch filters, or quit.");
+            System.out.println(
+                    "Search with <title>, \"film\" or \"tv\" to switch filters, or \"quit\" to quit.");
         } else {
-            System.out.println("Server: " + input);
+            System.out.println(input);
         }
     }
 

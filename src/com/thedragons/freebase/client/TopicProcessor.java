@@ -1,5 +1,6 @@
 package com.thedragons.freebase.client;
 
+import com.jayway.jsonpath.InvalidPathException;
 import com.jayway.jsonpath.JsonPath;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -29,7 +30,8 @@ public class TopicProcessor {
             writersList.add(writer.get("text").toString());
         }
 
-        String description =  JsonPath.read(topic,"$.property['/common/topic/description'].values[0].value").toString();
+        String description =  JsonPath.read(topic,
+                "$.property['/common/topic/description'].values[0].value").toString();
 
         String website;
         try {
@@ -40,8 +42,8 @@ public class TopicProcessor {
         }
 
         output.clear();
-        output.add(title);
         output.add("");
+        output.add(title);
         output.add(String.format("Directed by: %s", director));
         output.add(String.format("Rated: %s", rating));
 
@@ -66,6 +68,7 @@ public class TopicProcessor {
         output.add(String.format("Website: %s", website));
         output.add("Description:");
         output.add(description);
+        output.add("");
 
         return output;
     }
@@ -75,6 +78,13 @@ public class TopicProcessor {
 
         String title = JsonPath.read(topic,"$.property['/type/object/name'].values[0].value").toString();
 
+        JSONArray genres = JsonPath.read(topic,  "$.property['/tv/tv_program/genre'].values");
+        ArrayList<String> genreList = new ArrayList<>();
+        for (Object obj : genres) {
+            JSONObject genre = (JSONObject) obj;
+            genreList.add(genre.get("text").toString());
+        }
+
         JSONArray creators = JsonPath.read(topic,  "$.property['/tv/tv_program/program_creator'].values");
         ArrayList<String> creatorList = new ArrayList<>();
         for (Object obj : creators) {
@@ -82,13 +92,15 @@ public class TopicProcessor {
             creatorList.add(creator.get("text").toString());
         }
 
-        JSONObject networkTemp0 = JsonPath.read(topic,
-                "$.property['/tv/tv_program/original_network'].values[0]");
-        JSONObject networkTemp1 = (JSONObject) networkTemp0.get("property");
-        JSONObject networkTemp2 = (JSONObject) networkTemp1.get("/tv/tv_network_duration/network");
-        JSONArray networkTemp3 = (JSONArray) networkTemp2.get("values");
-        JSONObject networkTemp4 = (JSONObject) networkTemp3.get(0);
-        String network = (String) networkTemp4.get("text");
+        String network;
+        try {
+            JSONObject networkTemp = JsonPath.read(topic,
+                    "$.property['/tv/tv_program/original_network'].values[0]");
+            network = JsonPath.read(networkTemp,
+                    "$.property['/tv/tv_network_duration/network'].values[0].text");
+        } catch (InvalidPathException e) {
+            network = "";
+        }
 
         JSONArray descriptions =
                 JsonPath.read(topic, "$.property['/common/topic/description'].values");
@@ -121,8 +133,17 @@ public class TopicProcessor {
         }
 
         output.clear();
-        output.add(title);
         output.add("");
+        output.add(title);
+
+        String genreTemp = "Genre: ";
+        for (int i = 0; i < genreList.size(); i++) {
+            genreTemp += genreList.get(i);
+            if (i != genreList.size() - 1) {
+                genreTemp += ", ";
+            }
+        }
+        output.add(genreTemp);
 
         String creatorsTemp = "Program creator: ";
         for (int i = 0; i < creatorList.size(); i++) {
@@ -131,18 +152,21 @@ public class TopicProcessor {
                 creatorsTemp += ", ";
             }
         }
-
         output.add(creatorsTemp);
+
         output.add(String.format("Network: %s", network));
         output.add(String.format("Website: %s", website));
         output.add(String.format("Number of seasons: %s", numSeasons));
         if (!numEpisodes.equals("[]")) {
             int num = (int) Float.parseFloat(numEpisodes);
             output.add(String.format("Number of episodes: %s", num));
+        } else {
+            output.add("Number of episodes:");
         }
         output.add("Description:");
         descriptionList.forEach(output::add);
         //episodeList.forEach(output::add);
+        output.add("");
 
         return output;
     }
